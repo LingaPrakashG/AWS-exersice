@@ -1,0 +1,318 @@
+# AWS Application Load Balancer (ALB) Lab
+
+## Path-Based Routing and Normal Routing
+
+---
+
+## 📌 Lab Objective
+
+In this lab, students will learn how to:
+
+* Launch EC2 instances
+* Install and configure a web server
+* Create Target Groups
+* Create an Application Load Balancer (ALB)
+* Configure **Normal Routing**
+* Configure **Path-Based Routing**
+* Test the load balancer using URL paths
+
+---
+
+## 🏗 Architecture
+
+```
+                Internet Users
+                       |
+                       |
+           Application Load Balancer
+                       |
+        ---------------------------------
+        |                               |
+     /app1                           /app2
+        |                               |
+    EC2 Instance 1                EC2 Instance 2
+     (APP1 Server)                (APP2 Server)
+```
+
+---
+
+# 📋 Prerequisites
+
+Before starting this lab, make sure you have:
+
+* AWS Account
+* Basic knowledge of AWS EC2
+* Key Pair for EC2 access
+* Security Group allowing **HTTP (Port 80)**
+
+---
+
+# 🚀 Step 1: Launch EC2 Instance 1
+
+Go to:
+
+```
+AWS Console → EC2 → Launch Instance
+```
+
+### Instance Configuration
+
+| Setting        | Value           |
+| -------------- | --------------- |
+| Name           | App1-Server     |
+| AMI            | Amazon Linux 2  |
+| Instance Type  | t2.micro        |
+| Security Group | Allow HTTP (80) |
+| Key Pair       | Your key pair   |
+
+### User Data Script
+
+Paste the following script:
+
+```bash
+#!/bin/bash
+yum update -y
+yum install -y httpd
+systemctl start httpd
+systemctl enable httpd
+echo "<h1>Welcome to APP1 Server</h1>" > /var/www/html/index.html
+```
+
+Launch the instance.
+
+---
+
+# 🚀 Step 2: Launch EC2 Instance 2
+
+Repeat the same process.
+
+### Instance Configuration
+
+| Setting       | Value          |
+| ------------- | -------------- |
+| Name          | App2-Server    |
+| AMI           | Amazon Linux 2 |
+| Instance Type | t2.micro       |
+
+### User Data Script
+
+```bash
+#!/bin/bash
+yum update -y
+yum install -y httpd
+systemctl start httpd
+systemctl enable httpd
+echo "<h1>Welcome to APP2 Server</h1>" > /var/www/html/index.html
+```
+
+Launch the instance.
+
+---
+
+# 🎯 Step 3: Create Target Groups
+
+Go to:
+
+```
+EC2 → Target Groups → Create Target Group
+```
+
+---
+
+## Target Group 1
+
+| Setting     | Value       |
+| ----------- | ----------- |
+| Target Type | Instances   |
+| Name        | app1-target |
+| Protocol    | HTTP        |
+| Port        | 80          |
+
+Register target:
+
+```
+App1-Server
+```
+
+---
+
+## Target Group 2
+
+| Setting     | Value       |
+| ----------- | ----------- |
+| Target Type | Instances   |
+| Name        | app2-target |
+| Protocol    | HTTP        |
+| Port        | 80          |
+
+Register target:
+
+```
+App2-Server
+```
+
+---
+
+# ⚖ Step 4: Create Application Load Balancer
+
+Go to:
+
+```
+EC2 → Load Balancers → Create Load Balancer
+```
+
+Select:
+
+```
+Application Load Balancer
+```
+
+---
+
+## Load Balancer Configuration
+
+| Setting            | Value             |
+| ------------------ | ----------------- |
+| Name               | My-Application-LB |
+| Scheme             | Internet-facing   |
+| Listener           | HTTP (80)         |
+| Availability Zones | Select 2 subnets  |
+
+Security Group:
+
+Allow **HTTP (Port 80)**
+
+Default Target Group:
+
+```
+app1-target
+```
+
+Click **Create Load Balancer**
+
+---
+
+# 🔀 Step 5: Configure Path-Based Routing
+
+Go to:
+
+```
+EC2 → Load Balancers → My-Application-LB
+```
+
+Open:
+
+```
+Listeners → View/Edit Rules
+```
+
+---
+
+## Rule 1
+
+Condition
+
+```
+Path is /app1*
+```
+
+Action
+
+```
+Forward to app1-target
+```
+
+---
+
+## Rule 2
+
+Condition
+
+```
+Path is /app2*
+```
+
+Action
+
+```
+Forward to app2-target
+```
+
+Save the rules.
+
+---
+
+# 🧪 Step 6: Testing the Load Balancer
+
+Copy the **Load Balancer DNS Name**
+
+Example:
+
+```
+http://my-alb-123456.us-east-1.elb.amazonaws.com
+```
+
+---
+
+## Test Default Routing
+
+```
+http://ALB-DNS
+```
+
+Expected Output:
+
+```
+Welcome to APP1 Server
+```
+
+---
+
+## Test APP1 Routing
+
+```
+http://ALB-DNS/app1
+```
+
+Expected Output:
+
+```
+Welcome to APP1 Server
+```
+
+---
+
+## Test APP2 Routing
+
+```
+http://ALB-DNS/app2
+```
+
+Expected Output:
+
+```
+Welcome to APP2 Server
+```
+
+---
+
+# ✅ Expected Result
+
+| URL     | Output      |
+| ------- | ----------- |
+| ALB DNS | APP1 Server |
+| /app1   | APP1 Server |
+| /app2   | APP2 Server |
+
+---
+
+# 🧹 Cleanup (Important)
+
+To avoid unnecessary AWS charges, delete the following resources:
+
+* Application Load Balancer
+* Target Groups
+* EC2 Instances
+* Security Groups (if created)
+
+---
