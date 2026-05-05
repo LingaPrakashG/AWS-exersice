@@ -1,0 +1,88 @@
+## 🧰 Services Used
+
+* AWS Management Console
+* AWS Identity and Access Management (IAM)
+
+---
+
+## 🧪 Step 1: Create IAM Users
+
+### User 1: ReadOnly User
+
+* Username: `readonly-user`
+* Enable AWS Management Console access
+* Set password
+
+### User 2: Writable User
+
+* Username: `write-user`
+* Enable AWS Management Console access
+* Set password
+
+---
+
+## 🧪 Step 2: Create IAM Groups
+
+### Group 1: ReadOnly Group
+
+* Group Name: `ReadOnly-Group`
+* Attach Policy:
+
+  * `ReadOnlyAccess` (AWS Managed Policy)
+
+---
+
+### Group 2: Write Access Group
+
+* Group Name: `Write-Access-Group`
+
+---
+
+## 🧪 Step 3: Create Custom Writable Policy
+
+Go to **IAM → Policies → Create Policy → JSON** and paste:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:*",
+        "ec2:*"
+      ],
+      "Resource": "*"
+    }
+  ]
+}
+```
+
+* Policy Name: `CustomWriteAccessPolicy`
+* Attach this policy to **Write-Access-Group**
+
+---
+
+## 🧪 Step 4: Assign Users to Groups
+
+* Add `readonly-user` → `ReadOnly-Group`
+* Add `write-user` → `Write-Access-Group`
+
+---
+
+## 🧪 Step 5: Test Access
+
+### Login as ReadOnly User
+
+* ✅ Can view S3 buckets and EC2 instances
+* ❌ Cannot create or delete resources
+
+---
+
+### Login as Writable User
+
+* ✅ Can create S3 buckets
+* ✅ Can launch EC2 instances
+* ✅ Can modify resources
+
+
